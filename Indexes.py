@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import shutil
 import subprocess
 import nltk
 from nltk.corpus import stopwords
@@ -21,11 +22,12 @@ class InvertedIndexPyserini:
         self.last_k1 = -1
 
     @staticmethod
-    def generate_index(documents_dict, index_path="Data/InvertedIndex", temp_jsonl_dir="Data/TempCollection"):
+    def generate_index(documents_dict, index_path="Data/InvertedIndex", temp_jsonl_dir="Data/TempCollection",segment_size=10,overlap_size=5):
+        shutil.rmtree("Data/InvertedIndex")
         os.makedirs(index_path, exist_ok=True)
         os.makedirs(temp_jsonl_dir, exist_ok=True)
 
-        chunker = BasicChunker(10, 5)
+        chunker = BasicChunker(segment_size, overlap_size)
 
         # ---------------------------------------------------------
         # STEP 1: PREPARE DATA IN JSONL FORMAT (Pyserini Requirement)
@@ -129,7 +131,8 @@ class InvertedIndexTantivy:
         self.index.register_tokenizer("legal_tokenizer", tokenizer)
 
     @staticmethod
-    def generate_index(documents_dict, index_path="Data/InvertedIndex"):
+    def generate_index(documents_dict, index_path="Data/InvertedIndex",segment_size=10,overlap_size=5):
+        shutil.rmtree("Data/InvertedIndex")
         os.makedirs(index_path, exist_ok=True)
         schema = InvertedIndexTantivy.get_schema()
         tokenizer = InvertedIndexTantivy.get_tokenizer()
@@ -137,7 +140,7 @@ class InvertedIndexTantivy:
         index = tantivy.Index(schema, path=index_path)
         index.register_tokenizer("legal_tokenizer", tokenizer)
 
-        chunker = BasicChunker(10,5)
+        chunker = BasicChunker(segment_size,overlap_size)
 
 
         # 5. SETUP WRITER AND LOOP

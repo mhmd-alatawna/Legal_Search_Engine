@@ -51,6 +51,6 @@ def measure_recall_k(searcher, query_dict, k) :
     print(f"recall@{k} : {round(success/total * 100,1)}%")
     return success/total
 
-# InvertedIndexTantivy.generate_index(load_gzipped_json("Data/filtered_data_small.json.gz"))
+InvertedIndexTantivy.generate_index(load_gzipped_json("Data/filtered_data_small.json.gz"))
 query_dict = load_gzipped_json("Data/query_dict.json.gz")
 print(multi_thread_measure_recall_k(BM25_searcher(), query_dict,10))

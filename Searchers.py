@@ -58,6 +58,8 @@ class BM25_searcher:
         retrieved_documents = [(doc_id,score) for doc_id, score in document_scores.items()]
         retrieved_documents = sorted(retrieved_documents, key=lambda x: x[1], reverse=True)
 
+        if len(retrieved_documents) == 0:
+            return []
         thresh_score = self.thresh * retrieved_documents[0][1]
         final_results = []
         for doc_id,score in retrieved_documents:

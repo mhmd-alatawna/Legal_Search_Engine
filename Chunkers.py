@@ -22,7 +22,7 @@ class BasicChunker:
         sentences = sent_tokenize(document)
 
         segments = []
-        for i in range(0, len(sentences), self.overlap_size):
+        for i in range(0, len(sentences), self.segment_size - self.overlap_size):
             segment = ' '.join(sentences[i:i + self.segment_size])
             segments.append(segment)
             if i + self.segment_size >= len(sentences):
