@@ -1,35 +1,32 @@
 from DataSetHandler import load_gzipped_json
-from Indexes import InvertedIndex
+from Indexes import *
 
 class BM25_searcher:
-    def __init__(self,thresh=0.5):
-        self.index = InvertedIndex()
-        self.searcher = self.index.get_searcher()
+    def __init__(self,thresh=0.5,macro_B=0.75, micro_K=1.2,micro_B=0.75,segment_multiplier=10):
+        self.index = InvertedIndexTantivy()
         self.segment_to_doc = load_gzipped_json("Data/segment_to_doc.json.gz")
         self.doc_to_segment_count = load_gzipped_json("Data/doc_to_segment_count.json.gz")
-        self.thresh = thresh
         self.avg_segment_count = 0
         for doc_id,segment_count in self.doc_to_segment_count.items():
             self.avg_segment_count += segment_count
         self.avg_segment_count = self.avg_segment_count / len(self.doc_to_segment_count)
+        self.B = macro_B
+        self.micro_B = micro_B
+        self.micro_K = micro_K
+        self.thresh = thresh
+        self.segment_multiplier = segment_multiplier
 
 
     def search(self, query_string, top_k=5):
         """
         Executes a BM25 search on the 'text' field and returns top-K documents.
         """
-        query = self.index.query_parser(query_string)
-
-        # Extract results
-        results = self.searcher.search(query, top_k*10)
+        results = self.index.search(query_string, top_k*self.segment_multiplier,k1=self.micro_K,b=self.micro_B)
         return self.doc_to_B25_segment(results)[:top_k]
 
     def doc_to_max_segment(self, segment_search_results):
         document_scores = {}
-        for score, segment_address in segment_search_results.hits:
-            doc = self.searcher.doc(segment_address)
-            segment_id = doc["segment_id"][0]
-
+        for segment_id,score in segment_search_results:
             prev_score = document_scores.get(self.segment_to_doc[segment_id],0)
             document_scores[self.segment_to_doc[segment_id]] = max(score,prev_score)
 
@@ -44,13 +41,10 @@ class BM25_searcher:
         return final_results
 
     def doc_to_B25_segment(self, segment_search_results):
-        K = 15
-        B = 0.8
+        K = 1.2
+        B = self.B
         document_scores = {}
-        for score, segment_address in segment_search_results.hits:
-            doc = self.searcher.doc(segment_address)
-            segment_id = doc["segment_id"][0]
-
+        for segment_id,score in segment_search_results:
             prev_score = document_scores.get(self.segment_to_doc[segment_id],0)
             document_scores[self.segment_to_doc[segment_id]] = score + prev_score
 
