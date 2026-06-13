@@ -1,0 +1,11 @@
+tqdm~=4.68.2
+tantivy~=0.26.0
+nltk~=3.9.4
+qdrant-client~=1.18.0
+pyprojroot~=0.3.0
+spacy~=3.8.13
+torch~=2.12.0
+transformers~=5.12.0
+numpy~=2.4.6
+# spacy extention module
+en_core_web_sm @ https://huggingface.co/spacy/en_core_web_sm/resolve/main/en_core_web_sm-3.8.0-py3-none-any.whl

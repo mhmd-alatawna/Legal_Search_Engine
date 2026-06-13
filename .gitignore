@@ -1,31 +1,11 @@
-# Python bytecode
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Virtual environments
-venv/
-env/
-.venv/
-
-# Logs
-*.log
-
-# Database files
-*.sqlite3
-
-# Coverage / testing
-.coverage
-htmlcov/
-.pytest_cache/
-
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-
-# PyCharm
-.idea/
-
-/Data
+Databases
+.venv
+COLIEE2021_Task1.ipynb
+RawFiles
+COLIEE_2024_Task1
+.git
+.idea
+manager.py
+example.sbatch
+Models
+en_core_web_sm-3.8.0-py3-none-any.whl
