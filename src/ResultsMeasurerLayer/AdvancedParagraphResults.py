@@ -2,9 +2,7 @@ import concurrent.futures
 
 from tqdm import tqdm
 
-from src.DataBaseLayer import DataLayerManager
-from src.DataBaseLayer.OriginalText.OriginalTextDatabase import OriginalTextDatabase
-from src.DataBaseLayer.Paragraphs.ParagraphDatabase import ParagraphDatabase
+from src.DatabaseLayer.DatabasesManagers.tmp_sqliteDB import SqliteDB
 from src.SearchersLayer.ParagraphToParagraphSearcher import ParagraphToParagraphSearcher
 
 
@@ -22,7 +20,7 @@ def measure_metrics_at_k(searcher, test_cases, k, pool_size):
     processed_count = 0
 
     def run_single_query(item):
-        local_paragraph_db = ParagraphDatabase(DataLayerManager.paragraphs_DB)
+        local_paragraph_db = SqliteDB(DataLayerManager.paragraphs_DB)
         case_id, ground_truth_citations = item
 
         query_paragraphs = local_paragraph_db.get_paragraphs_by_case(case_id)

@@ -1,9 +1,9 @@
-from src.DataBaseLayer.Paragraphs.ParagraphInvertedIndex import ParagraphInvertedIndex
+from src.DatabaseLayer.DatabasesManagers.tmp_invertedindex import InvertedIndex
 
 
 class ParagraphToParagraphSearcher:
     def __init__(self, index_path, doc_to_segment_count, thresh=0.5, macro_B=0.75):
-        self.index = ParagraphInvertedIndex(index_path)
+        self.index = InvertedIndex(index_path)
         self.doc_to_segment_count = doc_to_segment_count
 
         self.avg_segment_count = sum(self.doc_to_segment_count.values())
@@ -24,7 +24,7 @@ class ParagraphToParagraphSearcher:
 
         # 1. Execute search for every paragraph in the query case
         for para in query_paragraphs:
-            hits = self.index.search(para, pool_size_per_query)
+            hits = self.index.search(para, pool_size_per_query, "paragraphs")
 
             # 2. Pool the scores at the segment level
             for case_id, para_id, score in hits:

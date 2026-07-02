@@ -1,10 +1,10 @@
-from src.DataBaseLayer.Paragraphs.ParagraphInvertedIndex import ParagraphInvertedIndex
+from src.DatabaseLayer.DatabasesManagers.tmp_invertedindex import InvertedIndex
 
 
 class SectionToParagraphSearcher:
     def __init__(self, index_path, doc_to_segment_count, thresh=0.5, macro_B=0.75):
         # We hit the Paragraph Inverted Index because our target documents are mapped as paragraphs
-        self.index = ParagraphInvertedIndex(index_path)
+        self.index = InvertedIndex(index_path)
 
         # CRITICAL: doc_to_segment_count must be the paragraph count of the target cases,
         # NOT the section count. We are normalizing against the target's length.
@@ -29,7 +29,7 @@ class SectionToParagraphSearcher:
         # 1. Execute search for every section in the query case
         for section in query_sections:
             # Feed the section string as a query to the paragraph index
-            hits = self.index.search(section, pool_size_per_query)
+            hits = self.index.search(section, pool_size_per_query, "paragraphs")
 
             # 2. Pool the scores at the target segment (paragraph) level
             for case_id, para_id, score in hits:

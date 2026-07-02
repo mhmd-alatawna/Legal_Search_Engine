@@ -1,7 +1,11 @@
 import logging
 from typing import Dict, List, Tuple
-# Import your newly simplified embedding database
-from src.DataBaseLayer.Paragraphs.ParagraphEmbeddingsDatabase import ParagraphEmbeddingsDatabase
+
+from pyprojroot import here
+
+from src.DatabaseLayer.DatabasesManagers.tmp_qdrantDB import QdrantDB
+from configurations import *
+from src.DatabaseLayer.Embedders.TextEmbedder import EmbeddingGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +19,7 @@ class ParagraphToParagraphEmbeddingSearcher:
         semantic_thresh: Hard cutoff to filter out background noise before summing.
         macro_B: Length penalty scaling parameter (0 to 1).
         """
-        self.db = ParagraphEmbeddingsDatabase(db_path)
+        self.db = QdrantDB(db_path, qdrant_binaries_dir)
         self.doc_to_segment_count = doc_to_segment_count
 
         # Calculate average document length across the corpus
@@ -28,18 +32,27 @@ class ParagraphToParagraphEmbeddingSearcher:
         self.B = macro_B
         self.semantic_thresh = semantic_thresh
 
-    def search(self, query_paragraphs, top_k = 5, pool_size_per_query = 100):
+    def search(self, query_paragraphs, top_k=5, pool_size_per_query=100):
         """
-        Executes a semantic search for a full case by querying each paragraph.
-        Aggregates semantic hits and applies Macro-BM25 length normalization.
+        Executes an optimized batch semantic search for a full case by querying
+        all paragraphs concurrently. Aggregates semantic hits and applies Macro-BM25
+        length normalization.
         """
+        if not query_paragraphs:
+            return []
+
         aggregated_segment_scores = {}
 
-        # 1. Execute vector search for every paragraph in the query case
-        for para_text in query_paragraphs:
-            hits = self.db.search(query_text=para_text,top_k=pool_size_per_query)
+        # 1. Execute a single optimized batch vector search for all paragraphs at once
+        batch_hits = self.db.search_batch(
+            queries=query_paragraphs,
+            top_k=pool_size_per_query,
+            collection_name="paragraphs",
+            embedder=EmbeddingGenerator()
+        )
 
-            # 2. Pool the scores at the segment level
+        # 2. Iterate through the matrix of results and pool segment scores
+        for hits in batch_hits:
             for case_id, para_id, score in hits:
                 # CRITICAL: Ignore weak semantic matches to prevent long-document noise accumulation
                 if score < self.semantic_thresh:
@@ -48,7 +61,7 @@ class ParagraphToParagraphEmbeddingSearcher:
                 key = (case_id, para_id)
                 # Max-pooling approach per paragraph: if a query paragraph matches a target paragraph
                 # multiple times across the loop, we track its strongest match or sum them.
-                # Let's keep your sum behavior but clean of background noise.
+                # Keeping your sum behavior but clean of background noise.
                 aggregated_segment_scores[key] = aggregated_segment_scores.get(key, 0.0) + score
 
         # Reconstruct the tuple format

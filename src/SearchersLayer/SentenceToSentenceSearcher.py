@@ -1,9 +1,10 @@
-from src.DataBaseLayer.Sentences.SentenceInvertedIndex import SentenceInvertedIndex
+from src.DatabaseLayer.DatabasesManagers.tmp_invertedindex import InvertedIndex
+
 
 class SentenceToSentenceSearcher:
     def __init__(self, index_path, doc_to_segment_count, thresh=0.5, macro_B=0.75):
         # Updated to initialize the Sentence Inverted Index
-        self.index = SentenceInvertedIndex(index_path)
+        self.index = InvertedIndex(index_path)
         self.doc_to_segment_count = doc_to_segment_count
 
         self.avg_segment_count = sum(self.doc_to_segment_count.values())
@@ -24,7 +25,7 @@ class SentenceToSentenceSearcher:
 
         # 1. Execute search for every sentence in the query case
         for sent in query_sentences:
-            hits = self.index.search(sent, pool_size_per_query)
+            hits = self.index.search(sent, pool_size_per_query, "sentences")
 
             # 2. Pool the scores at the segment level
             # Updated to unpack sentence_id
