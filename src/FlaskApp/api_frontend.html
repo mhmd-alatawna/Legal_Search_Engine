@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LegalAI API</title>
+  <style>
+    :root {
+      --bg: #101214;
+      --panel: rgba(18, 22, 25, 0.88);
+      --panel-strong: rgba(24, 30, 34, 0.96);
+      --line: rgba(255, 255, 255, 0.13);
+      --text: #f1f5f2;
+      --muted: #a8b4af;
+      --teal: #46d5b8;
+      --gold: #efbd66;
+      --rose: #ff7893;
+      --ink: #111518;
+      --bad: #ff8278;
+      --shadow: 0 24px 72px rgba(0, 0, 0, 0.48);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 12% 20%, rgba(70, 213, 184, 0.18), transparent 32%),
+        radial-gradient(circle at 88% 12%, rgba(239, 189, 102, 0.16), transparent 35%),
+        radial-gradient(circle at 60% 100%, rgba(255, 120, 147, 0.12), transparent 36%),
+        linear-gradient(135deg, #101214, #151918 48%, #17120f);
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(1180px, calc(100% - 32px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 24px 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .glass {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      border-radius: 8px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--teal), var(--gold));
+      flex: 0 0 auto;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .api-controls {
+      display: flex;
+      gap: 8px;
+      align-items: end;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: var(--text);
+      background: rgba(8, 10, 12, 0.62);
+      border-radius: 8px;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(70, 213, 184, 0.82);
+      box-shadow: 0 0 0 3px rgba(70, 213, 184, 0.12);
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    button {
+      min-height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 8px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 850;
+    }
+
+    button.primary {
+      color: var(--ink);
+      border: 0;
+      background: linear-gradient(135deg, var(--teal), var(--gold));
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .tab {
+      min-height: 54px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .tab.active {
+      color: var(--ink);
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--teal), var(--gold));
+    }
+
+    .page {
+      display: none;
+      grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+      gap: 16px;
+    }
+
+    .page.active {
+      display: grid;
+    }
+
+    .card {
+      padding: 18px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .result {
+      min-height: 420px;
+      max-height: calc(100vh - 275px);
+      overflow: auto;
+      padding: 18px;
+    }
+
+    .result-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      color: #d9e3df;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .chip {
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      color: var(--text);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .chip.good {
+      color: var(--ink);
+      background: var(--teal);
+      border-color: transparent;
+    }
+
+    .chip.gold {
+      color: var(--ink);
+      background: var(--gold);
+      border-color: transparent;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 420px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 18px rgba(239, 189, 102, 0.8);
+      flex: 0 0 auto;
+    }
+
+    .dot.ok {
+      background: var(--teal);
+      box-shadow: 0 0 18px rgba(70, 213, 184, 0.9);
+    }
+
+    .dot.bad {
+      background: var(--bad);
+      box-shadow: 0 0 18px rgba(255, 130, 120, 0.9);
+    }
+
+    .placeholder {
+      border: 1px dashed rgba(239, 189, 102, 0.48);
+      color: #f3d7a0;
+      background: rgba(239, 189, 102, 0.08);
+      border-radius: 8px;
+      padding: 14px;
+      line-height: 1.45;
+    }
+
+    .small-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 880px) {
+      .topbar,
+      .page,
+      .tabs,
+      .small-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .api-controls {
+        justify-content: stretch;
+      }
+
+      .result {
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene" aria-hidden="true"></canvas>
+
+  <main class="app">
+    <header class="glass topbar">
+      <div class="brand">
+        <div class="logo">LA</div>
+        <div>
+          <h1>LegalAI API</h1>
+          <p class="muted">Simple mock-backed interface for cases, tests, and search.</p>
+        </div>
+      </div>
+      <div class="api-controls">
+        <label>
+          API URL
+          <input id="apiBase" value="http://127.0.0.1:5000">
+        </label>
+        <button id="healthBtn">Check</button>
+        <button id="reloadBtn">Reload Mock</button>
+        <span class="status"><span class="dot" id="statusDot"></span><span id="statusText">Idle</span></span>
+      </div>
+    </header>
+
+    <nav class="glass tabs" aria-label="Main menu">
+      <button class="tab active" data-page="casesPage">All Cases</button>
+      <button class="tab" data-page="testingPage">Testing</button>
+      <button class="tab" data-page="searchPage">Searching</button>
+    </nav>
+
+    <section id="casesPage" class="page active">
+      <aside class="glass card">
+        <h2>All Cases</h2>
+        <div class="stack">
+          <button class="primary" id="loadCasesBtn">Retrieve All Cases</button>
+          <label>
+            Case ID
+            <input id="caseIdInput" placeholder="000002">
+          </label>
+          <button id="caseTextBtn">Retrieve Case Text</button>
+        </div>
+      </aside>
+      <article class="glass result">
+        <div class="result-title">
+          <h2 id="casesTitle">Result</h2>
+          <span class="muted" id="casesMeta">No request yet</span>
+        </div>
+        <div id="casesOutput"></div>
+      </article>
+    </section>
+
+    <section id="testingPage" class="page">
+      <aside class="glass card">
+        <h2>Testing</h2>
+        <div class="stack">
+          <button class="primary" id="semanticTestBtn">Run Semantic Searcher Test</button>
+          <button id="lexicalTestBtn">Run Lexical Searcher Test</button>
+        </div>
+      </aside>
+      <article class="glass result">
+        <div class="result-title">
+          <h2 id="testingTitle">Result</h2>
+          <span class="muted" id="testingMeta">No test yet</span>
+        </div>
+        <div id="testingOutput"></div>
+      </article>
+    </section>
+
+    <section id="searchPage" class="page">
+      <aside class="glass card">
+        <h2>Searching</h2>
+        <div class="stack">
+          <label>
+            Searcher
+            <select id="searcherType">
+              <option value="semantic">Semantic</option>
+              <option value="lexical">Lexical</option>
+            </select>
+          </label>
+          <label>
+            Unit
+            <select id="searchUnit">
+              <option value="paragraphs">Paragraphs</option>
+              <option value="sentences">Sentences</option>
+            </select>
+          </label>
+          <label>
+            Input
+            <select id="searchInputType">
+              <option value="case">Case ID</option>
+              <option value="text">Text</option>
+            </select>
+          </label>
+          <label>
+            Case ID
+            <input id="searchCaseId" placeholder="000002">
+          </label>
+          <label>
+            Text
+            <textarea id="searchText" placeholder="Paste exact mock-backed text here"></textarea>
+          </label>
+          <div class="small-grid">
+            <label>
+              K
+              <input id="topK" type="number" min="1" value="5">
+            </label>
+            <label>
+              Pool
+              <input id="poolSize" type="number" min="1" value="30">
+            </label>
+          </div>
+          <button class="primary" id="runSearchBtn">Search</button>
+        </div>
+      </aside>
+      <article class="glass result">
+        <div class="result-title">
+          <h2 id="searchTitle">Result</h2>
+          <span class="muted" id="searchMeta">No search yet</span>
+        </div>
+        <div id="searchOutput"></div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const state = {
+      baseUrl: localStorage.getItem("legalai.baseUrl") || "http://127.0.0.1:5000"
+    };
+
+    const el = (id) => document.getElementById(id);
+    el("apiBase").value = state.baseUrl;
+
+    function baseUrl() {
+      const value = el("apiBase").value.trim().replace(/\/+$/, "");
+      localStorage.setItem("legalai.baseUrl", value);
+      return value;
+    }
+
+    function setStatus(kind, text) {
+      el("statusDot").className = `dot ${kind || ""}`;
+      el("statusText").textContent = text;
+    }
+
+    async function api(path, options = {}) {
+      const response = await fetch(`${baseUrl()}${path}`, {
+        headers: { "Content-Type": "application/json" },
+        ...options
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || response.statusText);
+      return data;
+    }
+
+    function show(target, value, meta = "") {
+      const node = el(target);
+      if (value && value.__placeholder) {
+        node.innerHTML = `<div class="placeholder">${escapeHtml(value.message)}</div>`;
+      } else if (Array.isArray(value)) {
+        node.innerHTML = chips(value);
+      } else {
+        node.innerHTML = `<pre>${escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
+      }
+      const metaNode = el(target.replace("Output", "Meta"));
+      if (metaNode) metaNode.textContent = meta;
+    }
+
+    function chips(values) {
+      if (!values.length) return '<p class="muted">No results.</p>';
+      if (values.length && Array.isArray(values[0])) {
+        const preview = values.slice(0, 100).map((row) => {
+          const id = row[0];
+          const count = Array.isArray(row[1]) ? row[1].length : "";
+          return `<span class="chip">${escapeHtml(String(id))}${count !== "" ? ` (${count})` : ""}</span>`;
+        }).join("");
+        return `<div class="chips">${preview}</div>${values.length > 100 ? `<p class="muted">Showing 100 of ${values.length}</p>` : ""}`;
+      }
+      return `<div class="chips">${values.map((item) => `<span class="chip good">${escapeHtml(String(item))}</span>`).join("")}</div>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function placeholder(message) {
+      return { __placeholder: true, message };
+    }
+
+    async function safe(target, title, action) {
+      try {
+        setStatus("", "Working");
+        const value = await action();
+        el(target.replace("Output", "Title")).textContent = title;
+        show(target, value, "OK");
+        setStatus("ok", "Ready");
+      } catch (error) {
+        el(target.replace("Output", "Title")).textContent = title;
+        show(target, placeholder(error.message), "Placeholder");
+        setStatus("bad", error.message);
+      }
+    }
+
+    document.querySelectorAll(".tab").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((tab) => tab.classList.remove("active"));
+        document.querySelectorAll(".page").forEach((page) => page.classList.remove("active"));
+        button.classList.add("active");
+        el(button.dataset.page).classList.add("active");
+      });
+    });
+
+    el("healthBtn").addEventListener("click", async () => {
+      try {
+        const result = await api("/health");
+        setStatus("ok", `Connected: ${result.mock_results_path || "mock file"}`);
+      } catch (error) {
+        setStatus("bad", error.message);
+      }
+    });
+
+    el("reloadBtn").addEventListener("click", async () => {
+      try {
+        await api("/mock/reload", { method: "POST" });
+        setStatus("ok", "Mock reloaded");
+      } catch (error) {
+        setStatus("bad", error.message);
+      }
+    });
+
+    el("loadCasesBtn").addEventListener("click", () => safe("casesOutput", "All Cases", async () => {
+      const cases = await api("/cases");
+      return cases;
+    }));
+
+    el("caseTextBtn").addEventListener("click", () => safe("casesOutput", "Case Text", async () => {
+      const caseId = el("caseIdInput").value.trim();
+      if (!caseId) return placeholder("Enter a case id first.");
+      return api(`/cases/${encodeURIComponent(caseId)}`);
+    }));
+
+    el("semanticTestBtn").addEventListener("click", () => safe("testingOutput", "Semantic Searcher Test", async () => {
+      return api("/measure/paragraphs-embeddings");
+    }));
+
+    el("lexicalTestBtn").addEventListener("click", () => safe("testingOutput", "Lexical Searcher Test", async () => {
+      return api("/measure/sentences-lexical");
+    }));
+
+    el("runSearchBtn").addEventListener("click", () => safe("searchOutput", "Search", runSearch));
+
+    async function runSearch() {
+      const searcher = el("searcherType").value;
+      const unit = el("searchUnit").value;
+      const inputType = el("searchInputType").value;
+      const k = Number(el("topK").value || 5);
+      const pool_size = Number(el("poolSize").value || 30);
+
+      if (searcher === "semantic" && unit === "paragraphs" && inputType === "case") {
+        const caseId = el("searchCaseId").value.trim();
+        if (!caseId) return placeholder("Enter a case id first.");
+        return api(`/cases/${encodeURIComponent(caseId)}/paragraph-semantic`);
+      }
+
+      if (searcher === "semantic" && unit === "paragraphs" && inputType === "text") {
+        const text = el("searchText").value;
+        if (!text.trim()) return placeholder("Enter text first.");
+        return api("/paragraph-semantic/search", {
+          method: "POST",
+          body: JSON.stringify({ text, k, pool_size })
+        });
+      }
+
+      if (searcher === "lexical" && unit === "sentences" && inputType === "case") {
+        const caseId = el("searchCaseId").value.trim();
+        if (!caseId) return placeholder("Enter a case id first.");
+        return api(`/cases/${encodeURIComponent(caseId)}/sentences-lexical`);
+      }
+
+      if (searcher === "lexical" && unit === "sentences" && inputType === "text") {
+        const text = el("searchText").value;
+        if (!text.trim()) return placeholder("Enter text first.");
+        return api("/sentences-lexical/search", {
+          method: "POST",
+          body: JSON.stringify({ text, k, pool_size })
+        });
+      }
+
+      return placeholder(`${capitalize(searcher)} search by ${unit} is not implemented in the Flask API or mock file yet.`);
+    }
+
+    function capitalize(value) {
+      return value.slice(0, 1).toUpperCase() + value.slice(1);
+    }
+
+    function startScene() {
+      const canvas = el("scene");
+      const ctx = canvas.getContext("2d");
+      let particles = [];
+
+      function resize() {
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * ratio;
+        canvas.height = window.innerHeight * ratio;
+        canvas.style.width = `${window.innerWidth}px`;
+        canvas.style.height = `${window.innerHeight}px`;
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        particles = Array.from({ length: Math.min(70, Math.max(34, Math.floor(window.innerWidth / 22))) }, () => ({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          vx: (Math.random() - 0.5) * 0.22,
+          vy: (Math.random() - 0.5) * 0.22,
+          hue: Math.random()
+        }));
+      }
+
+      function color(hue, alpha) {
+        if (hue < 0.4) return `rgba(70, 213, 184, ${alpha})`;
+        if (hue < 0.75) return `rgba(239, 189, 102, ${alpha})`;
+        return `rgba(255, 120, 147, ${alpha})`;
+      }
+
+      function frame() {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        for (const item of particles) {
+          item.x += item.vx;
+          item.y += item.vy;
+          if (item.x < 0 || item.x > window.innerWidth) item.vx *= -1;
+          if (item.y < 0 || item.y > window.innerHeight) item.vy *= -1;
+        }
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const a = particles[i];
+            const b = particles[j];
+            const distance = Math.hypot(a.x - b.x, a.y - b.y);
+            if (distance < 160) {
+              ctx.strokeStyle = color((a.hue + b.hue) / 2, (1 - distance / 160) * 0.15);
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.stroke();
+            }
+          }
+        }
+        for (const item of particles) {
+          ctx.fillStyle = color(item.hue, 0.62);
+          ctx.beginPath();
+          ctx.arc(item.x, item.y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        requestAnimationFrame(frame);
+      }
+
+      window.addEventListener("resize", resize);
+      resize();
+      frame();
+    }
+
+    startScene();
+    el("healthBtn").click();
+  </script>
+</body>
+</html>

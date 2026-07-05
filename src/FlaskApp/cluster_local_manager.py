@@ -1,5 +1,6 @@
 import json
 import os
+import pickle
 from pathlib import Path
 from xmlrpc.client import Fault, dumps, loads
 
@@ -14,7 +15,7 @@ CLUSTER_PASSWORD_FILE = os.getenv(
     r"C:\Users\Owner\OneDrive\Desktop\ClusterSSHPassword.txt",
 )
 # CLUSTER_REMOTE_HOST = os.getenv("CLUSTER_REMOTE_HOST", "127.0.0.1")
-CLUSTER_REMOTE_HOST = "ise-4090-07"
+CLUSTER_REMOTE_HOST = "ise-4090-13"
 CLUSTER_REMOTE_PORT = int(os.getenv("CLUSTER_REMOTE_PORT", "9000"))
 
 def _cluster_password():
@@ -208,14 +209,33 @@ def search_sentence_lexical_by_text(to_search_text, k=5, pool_size=30) :
 
 
 if __name__ == "__main__":
+    results = {}
     all_cases = get_all_cases()
-    case_id = all_cases[0][0]
-    my_text = get_case_text(case_id)[1]
+    results["get_all_cases"] = all_cases
 
-    # require_paragraphs_embeddings_search_measurer()
-    # search_paragraph_semantic_by_case(case_id)
-    # search_paragraph_semantic_by_text(my_text)
+    case_id1 = all_cases[0][0]
+    my_text1 = get_case_text(case_id1)[1]
 
-    require_sentences_lexical_search_measure()
-    search_sentences_lexical_by_case(case_id)
-    search_sentence_lexical_by_text(my_text)
+    case_id2 = all_cases[1][0]
+    my_text2 = get_case_text(case_id2)[1]
+
+    results[f"get_case_text({case_id1})"] = get_case_text(case_id1)
+    results[f"get_case_text({case_id2})"] = get_case_text(case_id2)
+
+    results["require_paragraphs_embeddings_search_measurer"] = require_paragraphs_embeddings_search_measurer()
+    results[f"search_paragraph_semantic_by_case({case_id1})"] = search_paragraph_semantic_by_case(case_id1)
+    results[f"search_paragraph_semantic_by_text({my_text1})"] = search_paragraph_semantic_by_text(my_text1)
+
+    results[f"search_paragraph_semantic_by_case({case_id2})"] = search_paragraph_semantic_by_case(case_id2)
+    results[f"search_paragraph_semantic_by_text({my_text2})"] = search_paragraph_semantic_by_text(my_text2)
+
+    # results["require_sentences_lexical_search_measure"] = require_sentences_lexical_search_measure()
+    results[f"search_sentences_lexical_by_case({case_id1})"] = search_sentences_lexical_by_case(case_id1)
+    results[f"search_sentence_lexical_by_text({my_text1})"] = search_sentence_lexical_by_text(my_text1)
+
+    results[f"search_sentences_lexical_by_case({case_id2})"] = search_sentences_lexical_by_case(case_id2)
+    results[f"search_sentence_lexical_by_text({my_text2})"] = search_sentence_lexical_by_text(my_text2)
+
+    with open("results.pkl", "wb") as f:
+        pickle.dump(results, f)
+
